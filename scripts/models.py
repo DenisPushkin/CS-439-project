@@ -4,6 +4,7 @@ import torch.nn as nn
 from collections import OrderedDict
 import os
 
+
 _NOISE_DIM = 128
 _H_FILTERS = 64
 
@@ -28,7 +29,6 @@ class DiscriminatorCNN28(nn.Module):
         self.img_size = img_size
         self.n_outputs = n_outputs
         self.main = nn.Sequential(
-            #nn.Conv2d(img_channels, h_filters, kernel_size, stride, padding, bias=False)
             _apply_sn(nn.Conv2d(img_channels, h_filters, 4, 2, 1, bias=False)),
             nn.LeakyReLU(0.2, inplace=True),
             _apply_sn(nn.Conv2d(h_filters, h_filters * 2, 4, 2, 1, bias=False)),
@@ -50,7 +50,7 @@ class DiscriminatorCNN28(nn.Module):
         return x.view(-1, self.n_outputs)
 
     def load(self, model):
-        self.load_state_dict(model.state_dict())
+      self.load_state_dict(model.state_dict())
 
 
 class GeneratorCNN28(nn.Module):
@@ -65,7 +65,6 @@ class GeneratorCNN28(nn.Module):
         super(GeneratorCNN28, self).__init__()
         self.noise_dim = noise_dim
         self.main = nn.Sequential(
-            #ConvTranspose2d(in_channels, out_channels, kernel_size, stride=1, padding=0)
             nn.ConvTranspose2d(noise_dim, h_filters * 8, 3, 1, 0, bias=False),
             nn.BatchNorm2d(_H_FILTERS * 8),
             nn.ReLU(inplace=True),
