@@ -16,7 +16,9 @@ def get_plot_func(dataset, out_dir, pretrained_clf_path, img_size, num_samples_e
   l2List = []
   entropyList = []
   TVList = []
-  def plot_func(samples, iteration, time_tick, G=None, D=None, G_avg=None, G_ema=None):
+  G_losses = []
+  D_losses = []
+  def plot_func(samples, iteration, time_tick, G_loss, D_loss, G=None, D=None, G_avg=None, G_ema=None):
     fig = plt.figure(figsize=(12,5), dpi=100)
     plt.subplot(1,2,1)
     samples = samples.view(100, *img_size)
@@ -32,7 +34,8 @@ def get_plot_func(dataset, out_dir, pretrained_clf_path, img_size, num_samples_e
     l2List.append(metrics['L2'])
     entropyList.append(metrics['entropy'])
     TVList.append(metrics['TV'])
-                  
+    D_losses.append(D_loss) 
+    G_losses.append(G_loss) 
     if G_avg is not None:
       metrics = get_metrics(pretrained_clf, num_samples_eval, mu_real, sigma_real, G_avg)
       fids_avg.append(metrics['fid'])
@@ -72,6 +75,8 @@ def get_plot_func(dataset, out_dir, pretrained_clf_path, img_size, num_samples_e
         'entropy': list(entropyList),
         'l2-loss': list(l2List),
         'TVs': list(TVList),
+        'G_losses': list(G_losses),
+        'D_losses': list(D_losses),
         'iterations':iterations,
         'times': times
     }
