@@ -194,6 +194,8 @@ def train(dataset, iterations, batch_size=32, lr=1e-4,
         samples = G(fixed_noise)
       print(f"Iter {i}: Mean proba from D(G(z)): {mean_proba:.4f} +/- {std_proba:.4f}")
       plot_func(samples.detach().cpu(), time_tick=working_time, D=D, G=G, iteration=i, G_avg=G_avg, G_ema=G_ema)
+      print(f"Loss Generator: {lossG}")
+      print(f"Loss Discriminator: {lossD}")
   
 
 def save_models(G, D, opt_G, opt_D, out_dir, suffix):

@@ -13,6 +13,9 @@ def get_plot_func(dataset, out_dir, pretrained_clf_path, img_size, num_samples_e
   mu_real, sigma_real = compute_mu_sigma_pretrained_model(dataset, pretrained_clf)
   inception_means, inception_stds, inception_means_ema, inception_means_avg, fids, fids_ema, fids_avg = [], [], [], [], [], [], []
   iterations, times = [], []
+  l2List = []
+  entropyList = []
+  TVList = []
   def plot_func(samples, iteration, time_tick, G=None, D=None, G_avg=None, G_ema=None):
     fig = plt.figure(figsize=(12,5), dpi=100)
     plt.subplot(1,2,1)
@@ -26,6 +29,10 @@ def get_plot_func(dataset, out_dir, pretrained_clf_path, img_size, num_samples_e
     fids.append(metrics['fid'])
     inception_means.append(metrics['inception_mean'])
     inception_stds.append(metrics['inception_std'])
+    l2List.append(metrics['L2'])
+    entropyList.append(metrics['entropy'])
+    TVList.append(metrics['TV'])
+                  
     if G_avg is not None:
       metrics = get_metrics(pretrained_clf, num_samples_eval, mu_real, sigma_real, G_avg)
       fids_avg.append(metrics['fid'])
@@ -62,6 +69,9 @@ def get_plot_func(dataset, out_dir, pretrained_clf_path, img_size, num_samples_e
         'fids_ema': list(fids_ema),
         'fids_avg': list(fids_avg),
         'fids': list(fids),
+        'entropy': list(entropyList),
+        'l2-loss': list(l2List),
+        'TVs': list(TVList),
         'iterations':iterations,
         'times': times
     }
