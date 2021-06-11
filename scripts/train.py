@@ -8,6 +8,14 @@ from lookahead import Lookahead
 from models import GeneratorCNN28, DiscriminatorCNN28
 
 
+def elapsed(last_time=[time.time()]):
+    """ Returns the time passed since elapsed() was last called. """
+    current_time = time.time()
+    diff = current_time - last_time[0]
+    last_time[0] = current_time
+    return diff
+
+
 def get_disciminator_loss(D, x_real, x_gen, lbl_real, lbl_fake):
   """"""
   D_x = D(x_real)
@@ -113,11 +121,11 @@ def train(dataset, iterations, batch_size=32, lr=1e-4,
     G_avg = copy.deepcopy(G)
     G_ema = copy.deepcopy(G)
 
-  start_time = time.perf_counter()
-
+  working_time = 0
   for i in range(iterations):
 
     # STEP 1: get G_{t+1} (G_extra)
+    elapsed()
     if extragrad:
       optimizerG_extra.zero_grad()
       z = torch.randn(batch_size, G_extra.noise_dim, device=device)
@@ -174,6 +182,7 @@ def train(dataset, iterations, batch_size=32, lr=1e-4,
     #if i % 20000 == 0:
     #  save_models(G, D, optimizerG, optimizerD, out_dir, suffix=f"{i}")
 
+    working_time += elapsed()
     # Just plotting things
     if i % eval_every == 0 or i == iterations-1:
       if out_dir is not None:
@@ -184,7 +193,7 @@ def train(dataset, iterations, batch_size=32, lr=1e-4,
         std_proba = probas.std().cpu().item()
         samples = G(fixed_noise)
       print(f"Iter {i}: Mean proba from D(G(z)): {mean_proba:.4f} +/- {std_proba:.4f}")
-      plot_func(samples.detach().cpu(), time_tick=time.perf_counter() - start_time, D=D, G=G, iteration=i, G_avg=G_avg, G_ema=G_ema)
+      plot_func(samples.detach().cpu(), time_tick=working_time, D=D, G=G, iteration=i, G_avg=G_avg, G_ema=G_ema)
   
 
 def save_models(G, D, opt_G, opt_D, out_dir, suffix):
