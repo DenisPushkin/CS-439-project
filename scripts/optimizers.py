@@ -16,13 +16,18 @@ def closure():
 
 class Extragrad_Var_Reduction():
 
-    def __init__(self, parameters, dual_parameters, *, lr=1e-3, alpha=0.9, p=0.95):
+    def __init__(
+        self, parameters, dual_parameters,  *,
+        lr=1e-3, betas=(0.5, 0.999),
+        alpha=0.9, p=0.95,
+        optimizer=Optimizer
+    ):
         self.lr = lr
         self.alpha = alpha
         self.p = 0.95
-        defaults = dict(lr=lr, p=p, alpha=alpha)
-        self.optimizer = Optimizer(parameters, defaults)
-        self.dual_optimizer = Optimizer(dual_parameters, defaults)
+        defaults = dict(lr=lr, betas=betas)
+        self.optimizer = optimizer(parameters, **defaults)
+        self.dual_optimizer = optimizer(dual_parameters, **defaults)
     
     @torch.no_grad()
     def step(self, closure):
@@ -41,8 +46,8 @@ class Extragrad_Var_Reduction():
                 if p.grad is not None:
                     dual_params_with_grad.append(p)
                     dual_grads.append(p.grad)
-                    dual_params_with_grad_cp.append(p.detach.clone())
-                    dual_grads_cp.append(p.grad.detach.clone())
+                    dual_params_with_grad_cp.append(p.detach().clone())
+                    dual_grads_cp.append(p.grad.detach().clone())
         
         for group in self.optimizer.param_groups:
             for p in group['params']:
@@ -52,23 +57,32 @@ class Extragrad_Var_Reduction():
         
         proceed = True
         while proceed:
-            self._update_start(params_with_grad, dual_params_with_grad_cp, dual_grads_cp)
+            self._update_start(params_with_grad, dual_params_with_grad_cp)
+            self._set_grads(params_with_grad, dual_grads_cp)
+            self.optimizer.step()
+            
             with torch.enable_grad():
                 loss, dual_loss = closure()
-            self._update_finish(params_with_grad, grads, dual_grads)
-            proceed = random.random() < p
+            
+            for idx, param in enumerate(params_with_grad):
+                param.grad.add_(dual_grads[idx], alpha=-1)
+            self.optimizer.step()
+            
+            proceed = random.random() < self.p
         
         return loss, dual_loss
 
-    def update_start(self, params, dual_params, dual_grads):
+    def _update_start(self, params, dual_params):
         for idx, param in enumerate(params):
             param.mul_(self.alpha).add_(dual_params[idx], alpha=1-self.alpha)
-            param.add_(dual_grads[idx], alpha=-self.lr)
     
-    def update_end(self, params, grads, dual_grads):
+    def _set_grads(self, params, new_grads):
         for idx, param in enumerate(params):
-            param.add_(grads[idx], alpha=-self.lr)
-            param.add_(dual_grads, alpha=self.lr)
+            param.grad = new_grads[idx]
+            
+    def zero_grad(self):
+        self.optimizer.zero_grad()
+        self.dual_optimizer.zero_grad()
 
 
         

@@ -2,21 +2,14 @@ import torch
 import torch.nn as nn
 import os
 from torch.utils.data import DataLoader
-import time
 import copy
+
+from utils import elapsed, get_sampler
 from lookahead import Lookahead
 from models import GeneratorCNN28, DiscriminatorCNN28
 
 
-def elapsed(last_time=[time.time()]):
-    """ Returns the time passed since elapsed() was last called. """
-    current_time = time.time()
-    diff = current_time - last_time[0]
-    last_time[0] = current_time
-    return diff
-
-
-def get_disciminator_loss(D, x_real, x_gen, lbl_real, lbl_fake):
+def get_discriminator_loss(D, x_real, x_gen, lbl_real, lbl_fake):
   """"""
   D_x = D(x_real)
   D_G_z = D(x_gen)
@@ -31,21 +24,6 @@ def get_generator_loss(G, D, z, lbl_real):
   D_G_z = D(G(z))
   lossG = torch.binary_cross_entropy_with_logits(D_G_z, lbl_real).mean()
   return lossG
-
-
-def get_sampler(dataset, batch_size, shuffle=True, num_workers=1, drop_last=True):
-  dataloader = DataLoader(dataset, batch_size, shuffle=shuffle, 
-                          num_workers=num_workers, drop_last=drop_last)
-  dataloader_iterator = iter(dataloader)
-  def sampler():
-    nonlocal dataloader_iterator
-    try:
-        data = next(dataloader_iterator) 
-    except StopIteration:
-        dataloader_iterator = iter(dataloader)
-        data = next(dataloader_iterator) 
-    return data
-  return sampler
 
 
 def update_avg_gen(G, G_avg, n_gen_update):
@@ -141,7 +119,7 @@ def train(dataset, iterations, batch_size=32, lr=1e-4,
       z = torch.randn(batch_size, G.noise_dim, device=device)
       with torch.no_grad():
         x_gen = G(z)
-      lossD = get_disciminator_loss(D_extra, x_real, x_gen, lbl_real, lbl_fake)
+      lossD = get_discriminator_loss(D_extra, x_real, x_gen, lbl_real, lbl_fake)
       lossD.backward()
       optimizerD_extra.step()
 
@@ -152,7 +130,7 @@ def train(dataset, iterations, batch_size=32, lr=1e-4,
     with torch.no_grad():
       x_gen = G_extra(z) # using G_{t+1}
     optimizerD.zero_grad()
-    lossD = get_disciminator_loss(D, x_real, x_gen, lbl_real, lbl_fake)
+    lossD = get_discriminator_loss(D, x_real, x_gen, lbl_real, lbl_fake)
     lossD.backward()
     if grad_max_norm is not None:
       nn.utils.clip_grad_norm_(D.parameters(), grad_max_norm)
@@ -195,8 +173,10 @@ def train(dataset, iterations, batch_size=32, lr=1e-4,
       print(f"Iter {i}: Mean proba from D(G(z)): {mean_proba:.4f} +/- {std_proba:.4f}")
       plot_func(samples.detach().cpu(), time_tick=working_time, D_loss=lossD.item(), G_loss=lossG.item(), D=D, G=G, iteration=i, G_avg=G_avg, G_ema=G_ema)
 
-def save_models(G, D, opt_G, opt_D, out_dir, suffix):
+def save_models(G, D, out_dir, suffix, opt_G=None, opt_D=None):
   torch.save(G.state_dict(), os.path.join(out_dir, f"gen_{suffix}.pth"))
   torch.save(D.state_dict(), os.path.join(out_dir, f"disc_{suffix}.pth"))
-  torch.save(opt_G.state_dict(), os.path.join(out_dir, f"gen_optim_{suffix}.pth"))
-  torch.save(opt_D.state_dict(), os.path.join(out_dir, f"disc_optim_{suffix}.pth"))
+  if opt_G is not None:
+    torch.save(opt_G.state_dict(), os.path.join(out_dir, f"gen_optim_{suffix}.pth"))
+  if opt_D is not None:
+    torch.save(opt_D.state_dict(), os.path.join(out_dir, f"disc_optim_{suffix}.pth"))
