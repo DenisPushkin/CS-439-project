@@ -15,7 +15,7 @@ from models import GeneratorCNN28, DiscriminatorCNN28, save_models
 
 def train(epochs=5, batch_size=1024, 
           mini_batch_size=64, p=None, lr=1e-4,
-          betas=(0.5, 0.999), alpha=None, eval_every=100, 
+          betas=(0.9, 0.999), alpha=None, eval_every=100, 
           n_workers=4, device=torch.device('cuda'),
           grad_max_norm=1, out_dir=None, shuffle=True, 
           pretrained_clf_path="./mnist.pth", seed=None
@@ -24,7 +24,7 @@ def train(epochs=5, batch_size=1024,
         p = 2*mini_batch_size/batch_size
     if alpha is None:
         alpha = 1 - p
-    version = "epochs{}_bs{}_mbs{}_lr{}_betas{}_alpha{}_p{}_ee{}_seed{}".format(
+    version = "MinMax epochs{}_bs{}_mbs{}_lr{}_betas{}_alpha{}_p{}_ee{}_seed{}".format(
         epochs, batch_size, mini_batch_size, lr, betas, alpha, p, eval_every, seed
     )
     current_dir = os.path.join(out_dir, version)
@@ -58,7 +58,7 @@ def train(epochs=5, batch_size=1024,
     dual_D = copy.deepcopy(D)
     dual_G = copy.deepcopy(G)
     
-    optimizer_min_max = optimizers.Extragrad_Var_Reduction_Original(
+    optimizer_min_max = optimizers.Extragrad_Var_Reduction(
         parameters=[
             {
                 "params":D.parameters(),

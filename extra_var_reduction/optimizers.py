@@ -10,7 +10,7 @@ class Extragrad_Var_Reduction():
 
     def __init__(
         self, parameters, dual_parameters,  *,
-        lr=1e-3, betas=(0.5, 0.999),
+        lr=1e-3, betas=(0.9, 0.999),
         alpha=0.9, p=0.95,
         optimizer=Optimizer
     ):

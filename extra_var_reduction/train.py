@@ -15,7 +15,7 @@ from models import GeneratorCNN28, DiscriminatorCNN28, save_models
 
 def train(epochs=5, batch_size=1024, 
           mini_batch_size=64, p=None, lr=1e-4,
-          betas=(0.5, 0.999), alpha=None, eval_every=100, 
+          betas=(0.9, 0.999), alpha=None, eval_every=100, 
           n_workers=4, device=torch.device('cuda'),
           grad_max_norm=1, out_dir=None, shuffle=True, 
           pretrained_clf_path="./mnist.pth", seed=None
@@ -58,19 +58,21 @@ def train(epochs=5, batch_size=1024,
     dual_D = copy.deepcopy(D)
     dual_G = copy.deepcopy(G)
     
-    optimizer_G = optimizers.Extragrad_Var_Reduction_Original(
+    optimizer_G = optimizers.Extragrad_Var_Reduction(
         parameters=G.parameters(),
         dual_parameters=dual_G.parameters(),
         lr=lr,
+        betas=betas,
         alpha=alpha,
         p=p,
         optimizer=optimizer
     )
     
-    optimizer_D = optimizers.Extragrad_Var_Reduction_Original(
+    optimizer_D = optimizers.Extragrad_Var_Reduction(
         parameters=D.parameters(),
         dual_parameters=dual_D.parameters(),
         lr=lr,
+        betas=betas,
         alpha=alpha,
         p=p,
         optimizer=optimizer
@@ -99,73 +101,68 @@ def train(epochs=5, batch_size=1024,
             i += 1
             x_real = data.to(device)
 
-            for _ in range(5):
-                # Optimize Generator
-                optimizer_G.zero_grad()
-                z = torch.randn(batch_size, G.noise_dim, device=device)
-                dual_lossG = get_generator_loss(dual_G, D, z, lbl_real)
-                lossG = get_generator_loss(G, D, z, lbl_real)
-                dual_lossG.backward(inputs=list(dual_G.parameters()))
-                lossG.backward(inputs=list(G.parameters()))
-                if grad_max_norm is not None:
-                    nn.utils.clip_grad_norm_(dual_G.parameters(), grad_max_norm)
-                    nn.utils.clip_grad_norm_(G.parameters(), grad_max_norm)
-                
-                z_mini_iter = sampler(z, mini_batch_size)
-                def closure():
-                    z_mini = next(z_mini_iter)
-                    lossG = get_generator_loss(G, D, z_mini, lbl_real_mini)
-                    dual_lossG = get_generator_loss(dual_G, dual_D, z_mini, lbl_real_mini)
-                    lossG.backward(inputs=list(G.parameters()))
-                    dual_lossG.backward(inputs=list(dual_G.parameters()))
-                    if grad_max_norm is not None:
-                        nn.utils.clip_grad_norm_(G.parameters(), grad_max_norm)
-                        nn.utils.clip_grad_norm_(dual_G.parameters(), grad_max_norm)
-                    return lossG, dual_lossG
-                lossG, dual_lossG = optimizer_G.step(closure)
-                dual_G.load_state_dict(G.state_dict())
-                print("Generator losses")
-                print(lossG, dual_lossG)
+            # Optimize Generator
+            optimizer_G.zero_grad()
+            z = torch.randn(batch_size, G.noise_dim, device=device)
+            dual_lossG = get_generator_loss(dual_G, D, z, lbl_real)
+            lossG = get_generator_loss(G, D, z, lbl_real)
+            dual_lossG.backward(inputs=list(dual_G.parameters()))
+            lossG.backward(inputs=list(G.parameters()))
+            if grad_max_norm is not None:
+                nn.utils.clip_grad_norm_(dual_G.parameters(), grad_max_norm)
+                nn.utils.clip_grad_norm_(G.parameters(), grad_max_norm)
             
-            for _ in range(5):
-                # Optimize Descriminator
-                optimizer_D.zero_grad()
-                z = torch.randn(batch_size, G.noise_dim, device=device)
-                with torch.no_grad():
-                    x_gen = G(z)
-                
-                x_real = data.to(device)
-                lossD = get_discriminator_loss(D, x_real, x_gen, lbl_real, lbl_fake)
-                dual_lossD = get_discriminator_loss(dual_D, x_real, x_gen, lbl_real, lbl_fake)
-                
-                lossD.backward()
-                dual_lossD.backward()
+            z_mini_iter = sampler(z, mini_batch_size)
+            def closure():
+                z_mini = next(z_mini_iter)
+                lossG = get_generator_loss(G, D, z_mini, lbl_real_mini)
+                dual_lossG = get_generator_loss(dual_G, dual_D, z_mini, lbl_real_mini)
+                lossG.backward(inputs=list(G.parameters()))
+                dual_lossG.backward(inputs=list(dual_G.parameters()))
                 if grad_max_norm is not None:
-                    nn.utils.clip_grad_norm_(D.parameters(), grad_max_norm)
-                    nn.utils.clip_grad_norm_(dual_D.parameters(), grad_max_norm)
+                    nn.utils.clip_grad_norm_(G.parameters(), grad_max_norm)
+                    nn.utils.clip_grad_norm_(dual_G.parameters(), grad_max_norm)
+                return lossG, dual_lossG
+            lossG, dual_lossG = optimizer_G.step(closure)
+            dual_G.load_state_dict(G.state_dict())
+            
+            
+            # Optimize Descriminator
+            optimizer_D.zero_grad()
+            z = torch.randn(batch_size, G.noise_dim, device=device)
+            with torch.no_grad():
+                x_gen = G(z)
+            
+            x_real = data.to(device)
+            lossD = get_discriminator_loss(D, x_real, x_gen, lbl_real, lbl_fake)
+            dual_lossD = get_discriminator_loss(dual_D, x_real, x_gen, lbl_real, lbl_fake)
+            
+            lossD.backward()
+            dual_lossD.backward()
+            if grad_max_norm is not None:
+                nn.utils.clip_grad_norm_(D.parameters(), grad_max_norm)
+                nn.utils.clip_grad_norm_(dual_D.parameters(), grad_max_norm)
+            
+            mini_data_iter  = sampler(x_real, mini_batch_size)
+            z_mini_iter = sampler(z, mini_batch_size)
+            def closure():
+                x_real_mini = next(mini_data_iter)
+                z_mini = next(z_mini_iter)
                 
-                mini_data_iter  = sampler(x_real, mini_batch_size)
-                z_mini_iter = sampler(z, mini_batch_size)
-                def closure():
-                    x_real_mini = next(mini_data_iter)
-                    z_mini = next(z_mini_iter)
-                    
-                    with torch.no_grad():
-                        x_gen_mini = G(z_mini)
-                    
-                    lossD_mini = get_discriminator_loss(
-                        D, x_real_mini, x_gen_mini, lbl_real_mini, lbl_fake_mini
-                    )
-                    dual_lossD_mini = get_discriminator_loss(
-                        dual_D, x_real_mini, x_gen_mini, lbl_real_mini, lbl_fake_mini
-                    )
-                    lossD_mini.backward()
-                    dual_lossD_mini.backward()
-                    return lossD_mini, dual_lossD_mini
+                with torch.no_grad():
+                    x_gen_mini = G(z_mini)
+                
+                lossD_mini = get_discriminator_loss(
+                    D, x_real_mini, x_gen_mini, lbl_real_mini, lbl_fake_mini
+                )
+                dual_lossD_mini = get_discriminator_loss(
+                    dual_D, x_real_mini, x_gen_mini, lbl_real_mini, lbl_fake_mini
+                )
+                lossD_mini.backward()
+                dual_lossD_mini.backward()
+                return lossD_mini, dual_lossD_mini
                 
                 lossD, dual_lossD = optimizer_D.step(closure)
-                print("Discriminator losses")
-                print(lossD, dual_lossD)
                 dual_D.load_state_dict(D.state_dict())
             
             working_time += elapsed()
