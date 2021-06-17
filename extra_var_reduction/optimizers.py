@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.functional as F
 from torch.optim import Optimizer
+from lookahead import Lookahead
 
 
 class Extragrad_Var_Reduction():
@@ -12,13 +13,16 @@ class Extragrad_Var_Reduction():
         self, parameters, dual_parameters,  *,
         lr=1e-3, betas=(0.9, 0.999),
         alpha=0.9, p=0.95,
-        optimizer=Optimizer
+        optimizer=Optimizer,
+        use_lookahead=False
     ):
         self.lr = lr
         self.alpha = alpha
         self.p = p
         defaults = dict(lr=lr, betas=betas)
         self.optimizer = optimizer(parameters, **defaults)
+        if use_lookahead:
+            self.optimizer = Lookahead(self.optimizer, k=5, alpha=0.5)
         self.dual_optimizer = optimizer(dual_parameters, **defaults)
     
     @torch.no_grad()

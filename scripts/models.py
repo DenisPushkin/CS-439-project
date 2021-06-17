@@ -23,7 +23,6 @@ class DiscriminatorCNN28(nn.Module):
                              "number of output channels, the dimension of the noise "
                              "vector, as well as the depth of the convolution kernels.")
         super(DiscriminatorCNN28, self).__init__()
-        # _conv = nn.utils.spectral_norm(nn.Conv2d) if spectral_norm else nn.Conv2d
         _apply_sn = lambda x: nn.utils.spectral_norm(x) if spectral_norm else x
         self.img_channels = img_channels
         self.img_size = img_size
@@ -129,6 +128,8 @@ class MLP_mnist(nn.Module):
     return x, fc2_out
 
 
+#creating architecture for pretrained MNIST classifier, which we use for 
+#IS and FID metric evaluation
 def pretrained_mnist_model(input_dims=784, n_hiddens=[256, 256], n_class=10, 
                            pretrained=None):
     model = MLP_mnist(input_dims, n_hiddens, n_class)

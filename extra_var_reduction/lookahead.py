@@ -6,11 +6,6 @@ from torch.optim import Optimizer
 class Lookahead(Optimizer):
 
     def __init__(self, optimizer, k=5, alpha=0.5):
-        """
-        optimizer: inner optimizer
-        k: number of fast parameters update per one slow parameter update
-        alpha: synchronization parameter
-        """
         self.optimizer = optimizer
         self.k = k
         self.alpha = alpha

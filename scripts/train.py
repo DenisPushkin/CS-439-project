@@ -102,7 +102,7 @@ def train(dataset, iterations, batch_size=32, lr=1e-4,
   working_time = 0
   for i in range(iterations):
 
-    # STEP 1: get G_{t+1} (G_extra)
+    # STEP 1: update G_extra
     elapsed()
     if extragrad:
       optimizerG_extra.zero_grad()
@@ -111,7 +111,7 @@ def train(dataset, iterations, batch_size=32, lr=1e-4,
       lossG.backward()
       optimizerG_extra.step()
 
-    # STEP 3: Get D_{t+1} (D_extra)
+    # STEP 2: update D_extra
     if extragrad:
       optimizerD_extra.zero_grad()
       x_real, _ = sampler()
@@ -123,7 +123,7 @@ def train(dataset, iterations, batch_size=32, lr=1e-4,
       lossD.backward()
       optimizerD_extra.step()
 
-    # STEP 2: D optimization step using G_extra
+    # STEP 3: D optimization step using G_extra
     x_real, _ = sampler()
     x_real = x_real.to(device)
     z = torch.randn(batch_size, G.noise_dim, device=device)
@@ -153,13 +153,6 @@ def train(dataset, iterations, batch_size=32, lr=1e-4,
       update_avg_gen(G, G_avg, i)
       update_ema_gen(G, G_ema, beta_ema=0.9999)
 
-    #if lookahead and (i+1) % lookahead_k == 0: 
-    #  optimizerG.update_lookahead()
-    #  optimizerD.update_lookahead()
-
-    #if i % 20000 == 0:
-    #  save_models(G, D, optimizerG, optimizerD, out_dir, suffix=f"{i}")
-
     working_time += elapsed()
     # Just plotting things
     if i % eval_every == 0 or i == iterations-1:
@@ -173,7 +166,8 @@ def train(dataset, iterations, batch_size=32, lr=1e-4,
       print(f"Iter {i}: Mean proba from D(G(z)): {mean_proba:.4f} +/- {std_proba:.4f}")
       plot_func(samples.detach().cpu(), time_tick=working_time, D_loss=lossD.item(), G_loss=lossG.item(), D=D, G=G, iteration=i, G_avg=G_avg, G_ema=G_ema)
 
-def save_models(G, D, out_dir, suffix, opt_G=None, opt_D=None):
+
+def save_models(G, D, opt_G, opt_D, out_dir, suffix):
   torch.save(G.state_dict(), os.path.join(out_dir, f"gen_{suffix}.pth"))
   torch.save(D.state_dict(), os.path.join(out_dir, f"disc_{suffix}.pth"))
   if opt_G is not None:

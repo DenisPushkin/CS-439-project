@@ -1,10 +1,8 @@
-import shutil, fire, os, copy
+import shutil, os, copy #fire
 
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-
-import wandb
 
 import optimizers
 from metrics import get_discriminator_loss, get_generator_loss
@@ -13,12 +11,12 @@ from utils import elapsed, load_mnist, sampler
 from models import GeneratorCNN28, DiscriminatorCNN28, save_models
 
 
-def train(epochs=5, batch_size=1024, 
+def train(epochs=5, batch_size=1024, use_lookahead=False,
           mini_batch_size=64, p=None, lr=1e-4,
           betas=(0.9, 0.999), alpha=None, eval_every=100, 
           n_workers=4, device=torch.device('cuda'),
           grad_max_norm=1, out_dir=None, shuffle=True, 
-          pretrained_clf_path="./mnist.pth", seed=None
+          pretrained_clf_path='/content/drive/MyDrive/MLO_proj/Data/models/mnist.pth', seed=None
 ):
     if p is None:
         p = 2*mini_batch_size/batch_size
@@ -78,7 +76,8 @@ def train(epochs=5, batch_size=1024,
         lr=lr,
         alpha=alpha,
         p=p,
-        optimizer=optimizer
+        optimizer=optimizer,
+        use_lookahead=use_lookahead
     )
     
     #LBLs
@@ -177,5 +176,5 @@ def train(epochs=5, batch_size=1024,
                               D=D, G=G, iteration=i)
                     
                 
-if __name__=="__main__":
-    fire.Fire(train)
+#if __name__=="__main__":
+#    fire.Fire(train)
