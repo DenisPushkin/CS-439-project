@@ -23,8 +23,8 @@ def train(epochs=5, batch_size=1024, use_lookahead=False,
         p = 2*mini_batch_size/batch_size
     if alpha is None:
         alpha = 1 - p
-    version = "MinMax epochs{}_bs{}_mbs{}_lr{}_betas{}_alpha{}_p{}_ee{}_seed{}".format(
-        epochs, batch_size, mini_batch_size, lr, betas, alpha, p, eval_every, seed
+    version = "EGVR-epochs{}_bs{}_mbs{}_lr{}_betas{}_alpha{}_p{}_ee{}_seed{}_optim_{}".format(
+        epochs, batch_size, mini_batch_size, lr, betas, alpha, p, eval_every, seed, optim
     )
     current_dir = os.path.join(out_dir, version)
     shutil.rmtree(current_dir, ignore_errors=True)
