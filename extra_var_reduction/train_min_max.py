@@ -12,11 +12,12 @@ from models import GeneratorCNN28, DiscriminatorCNN28, save_models
 
 
 def train(epochs=5, batch_size=1024, use_lookahead=False,
-          mini_batch_size=64, p=None, lr=1e-4,
+          mini_batch_size=64, p=None, lr=1e-4, momentum=0,
           betas=(0.9, 0.999), alpha=None, eval_every=100, 
           n_workers=4, device=torch.device('cuda'),
           grad_max_norm=1, out_dir=None, shuffle=True, 
-          pretrained_clf_path='/content/drive/MyDrive/MLO_proj/Data/models/mnist.pth', seed=None
+          pretrained_clf_path='./mnist.pth', 
+          optim='adam', seed=None
 ):
     if p is None:
         p = 2*mini_batch_size/batch_size
@@ -51,7 +52,10 @@ def train(epochs=5, batch_size=1024, use_lookahead=False,
     G = GeneratorCNN28()
     D = DiscriminatorCNN28(img_size=28)
     
-    optimizer = torch.optim.Adam
+    if optim=='adam':
+        optimizer = torch.optim.Adam
+    elif optim=='sgd':
+        optimizer = torch.optim.SGD
     
     dual_D = copy.deepcopy(D)
     dual_G = copy.deepcopy(G)
@@ -76,6 +80,8 @@ def train(epochs=5, batch_size=1024, use_lookahead=False,
         lr=lr,
         alpha=alpha,
         p=p,
+        momentum=momentum,
+        betas=betas,
         optimizer=optimizer,
         use_lookahead=use_lookahead
     )

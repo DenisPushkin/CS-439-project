@@ -12,14 +12,18 @@ class Extragrad_Var_Reduction():
     def __init__(
         self, parameters, dual_parameters,  *,
         lr=1e-3, betas=(0.9, 0.999),
-        alpha=0.9, p=0.95,
+        alpha=0.9, p=0.95, momentum=0,
         optimizer=Optimizer,
         use_lookahead=False
     ):
         self.lr = lr
         self.alpha = alpha
         self.p = p
-        defaults = dict(lr=lr, betas=betas)
+        defaults = dict(lr=lr)
+        if optimizer is torch.optim.Adam:
+            self.defaults['betas'] = betas
+        if optimizer is torch.optim.SGD:
+            self.defaults['momentum'] = momentum
         self.optimizer = optimizer(parameters, **defaults)
         if use_lookahead:
             self.optimizer = Lookahead(self.optimizer, k=5, alpha=0.5)
