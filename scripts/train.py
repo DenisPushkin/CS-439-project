@@ -4,9 +4,9 @@ import os
 from torch.utils.data import DataLoader
 import copy
 
-from utils import elapsed, get_sampler
-from lookahead import Lookahead
-from models import GeneratorCNN28, DiscriminatorCNN28
+from .utils import elapsed, get_sampler
+from .lookahead import Lookahead
+from .models import GeneratorCNN28, DiscriminatorCNN28
 
 
 def get_discriminator_loss(D, x_real, x_gen, lbl_real, lbl_fake):

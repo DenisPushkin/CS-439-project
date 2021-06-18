@@ -1,10 +1,8 @@
 import random
 
 import torch
-import torch.nn as nn
-import torch.functional as F
 from torch.optim import Optimizer
-from lookahead import Lookahead
+from .lookahead import Lookahead
 
 
 class Extragrad_Var_Reduction():

@@ -3,8 +3,9 @@ import torchvision.utils as vision_utils
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-from models import pretrained_mnist_model
-from metrics import compute_mu_sigma_pretrained_model, get_metrics
+
+from .models import pretrained_mnist_model
+from .metrics import compute_mu_sigma_pretrained_model, get_metrics
 
 
 def get_plot_func(dataset, out_dir, pretrained_clf_path, img_size, num_samples_eval=10000, save_curves=None):

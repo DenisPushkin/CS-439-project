@@ -2,9 +2,10 @@ import shutil
 import os
 import json
 import torch
-from dataloader import load_mnist
-from plot import get_plot_func
-from train import train
+
+from .dataloader import load_mnist
+from .plot import get_plot_func
+from .train import train
 
 
 def get_dir(args, out_dir):

@@ -1,6 +1,5 @@
 import time
 
-from torch.utils.data import DataLoader
 import torchvision.datasets as _datasets
 import torchvision.transforms as _transforms
 

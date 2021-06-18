@@ -5,10 +5,10 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 import optimizers
-from metrics import get_discriminator_loss, get_generator_loss
-from plot import get_plot_func
-from utils import elapsed, load_mnist, sampler
-from models import GeneratorCNN28, DiscriminatorCNN28, save_models
+from .metrics import get_discriminator_loss, get_generator_loss
+from .plot import get_plot_func
+from .utils import elapsed, load_mnist, sampler
+from .models import GeneratorCNN28, DiscriminatorCNN28, save_models
 
 
 def train(epochs=5, batch_size=1024, use_lookahead=False,
