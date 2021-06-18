@@ -13,6 +13,7 @@ To reproduce our results you should open the ```run.ipynb``` notebook from the r
 
 _Remark: All the models was trained with GPUs on Colab and it takes approx 1-2 hours for each experiment! If you run it with CPU it could take a lot of time to fit the models properly._
 
+## Google Colab
 To run the notebook in the colab you should do next steps:
 1. Copy all files from the git into some folder ``` *project_dir* ``` at your Google Drive.
 2. Open run.ipynb with Colab
