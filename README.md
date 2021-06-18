@@ -20,5 +20,3 @@ To run the notebook in the colab you should do next steps:
 3. Mount notebook to your google drive
 4. Run command ```import os; os.chdir(*project_dir*)``` --- your notebook will be considered as in the folder ``` *project_dir* ``` and so all imports would be consedered correctly
 5. Run the experiments in the notebook
-
-## Implemetation
