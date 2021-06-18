@@ -9,8 +9,15 @@ Also there is an implementation of GAN models in the ```models.py``` which were 
 **`TeamMembers`**: **Denys Pushkin**, **Yaroslav Kivva**, **Zhecho Mitev**
 
 # Quickstart
-To reproduce our results you should open the ```main.ipynb``` notebook from the root of the repository and follow the instructions inside notebook.
+To reproduce our results you should open the ```run.ipynb``` notebook from the root of the repository and follow the instructions inside notebook.
 
 _Remark: All the models was trained with GPUs on Colab and it takes approx 1-2 hours for each experiment! If you run it with CPU it could take a lot of time to fit the models properly._
+
+To run the notebook in the colab you should do next steps:
+1. Copy all files from the git into some folder ``` *project_dir* ``` at your Google Drive.
+2. Open run.ipynb with Colab
+3. Mount notebook to your google drive
+4. Run command ```import os; os.chdir(*project_dir*)``` --- your notebook will be considered as in the folder ``` *project_dir* ``` and so all imports would be consedered correctly
+5. Run the experiments in the notebook
 
 ## Implemetation
