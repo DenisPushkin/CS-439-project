@@ -21,9 +21,9 @@ class Extragrad_Var_Reduction():
         self.p = p
         defaults = dict(lr=lr)
         if optimizer is torch.optim.Adam:
-            self.defaults['betas'] = betas
+            defaults['betas'] = betas
         if optimizer is torch.optim.SGD:
-            self.defaults['momentum'] = momentum
+            defaults['momentum'] = momentum
         self.optimizer = optimizer(parameters, **defaults)
         if use_lookahead:
             self.optimizer = Lookahead(self.optimizer, k=5, alpha=0.5)
