@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-import optimizers
+from . import optimizers
 from .metrics import get_discriminator_loss, get_generator_loss
 from .plot import get_plot_func
 from .utils import elapsed, load_mnist, sampler
