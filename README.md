@@ -1,4 +1,4 @@
-# CS-439
+# CS-439 Group Project - Variance Reduction methods for GANs
 This repository consists project implementation for [**EPFL CS-439**](https://edu.epfl.ch/coursebook/en/optimization-for-machine-learning-CS-439) course.
 
 # Introduction
