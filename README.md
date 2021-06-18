@@ -9,6 +9,8 @@ Also there is an implementation of GAN models in the ```models.py``` which were 
 **`TeamMembers`**: **Denys Pushkin**, **Yaroslav Kivva**, **Zhecho Mitev**
 
 # Quickstart
+Required packages: ```torch```, ```scipy```, ```numpy```, ```fire```
+
 To reproduce our results you should open the ```run.ipynb``` notebook from the root of the repository and follow the instructions inside notebook.
 
 _Remark: All the models was trained with GPUs on Colab and it takes approx 1-2 hours for each experiment! If you run it with CPU it could take a lot of time to fit the models properly._
